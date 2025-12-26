@@ -188,6 +188,12 @@ pub fn set_interface_status(interface: &str, enabled: bool) -> Result<()> {
 /// Disable IPv6 on an interface
 #[cfg(target_os = "linux")]
 pub fn disable_ipv6(interface: &str) -> Result<()> {
+    // Check if IPv6 is available for this interface
+    let sysctl_path = format!("/proc/sys/net/ipv6/conf/{}/disable_ipv6", interface);
+    if !std::path::Path::new(&sysctl_path).exists() {
+        anyhow::bail!("IPv6 is not available on this interface (kernel module may be disabled)");
+    }
+
     let sysctl_key = format!("net.ipv6.conf.{}.disable_ipv6", interface);
     execute_with_sudo("sysctl", &["-w", &format!("{}=1", sysctl_key)])?;
     Ok(())
@@ -202,6 +208,12 @@ pub fn disable_ipv6(interface: &str) -> Result<()> {
 /// Enable IPv6 on an interface
 #[cfg(target_os = "linux")]
 pub fn enable_ipv6(interface: &str) -> Result<()> {
+    // Check if IPv6 is available for this interface
+    let sysctl_path = format!("/proc/sys/net/ipv6/conf/{}/disable_ipv6", interface);
+    if !std::path::Path::new(&sysctl_path).exists() {
+        anyhow::bail!("IPv6 is not available on this interface (kernel module may be disabled)");
+    }
+
     let sysctl_key = format!("net.ipv6.conf.{}.disable_ipv6", interface);
     execute_with_sudo("sysctl", &["-w", &format!("{}=0", sysctl_key)])?;
     Ok(())

@@ -2,8 +2,6 @@ use crate::models::{DnsConfiguration, InterfaceAddress, InterfaceType, NetworkIn
 use anyhow::{Context, Result};
 use std::collections::HashMap;
 use std::net::IpAddr;
-
-#[cfg(target_os = "macos")]
 use std::process::Command;
 
 #[cfg(target_os = "linux")]
@@ -296,12 +294,11 @@ fn get_dns_configuration_linux() -> Result<DnsConfiguration> {
         Ok(config) => {
             let nameservers = config.nameservers.iter().map(|ns| ns.into()).collect();
 
-            let search_domains = config
-                .get_system_search_domains()
-                .unwrap_or_default()
-                .iter()
-                .map(|d| d.to_string())
-                .collect();
+            let search_domains = if let Some(domain) = config.get_system_domain() {
+                vec![domain.to_string()]
+            } else {
+                Vec::new()
+            };
 
             Ok(DnsConfiguration {
                 nameservers,
